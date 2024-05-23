@@ -7,13 +7,17 @@ import {
   CardContent,
   Button,
   Grid,
+  CardActions,
+  Link,
+  Chip
 } from "@mui/material";
-import { getRoundRobins } from "../services/roundRobinService"; // Import your service function
-import EditIcon from '@mui/icons-material/Edit';
+import AccessTimeIcon from '@mui/icons-material/AccessTime'; // Icon for time
+import EventIcon from '@mui/icons-material/Event'; // Icon for date
+import LinkIcon from '@mui/icons-material/Link'; // Icon for link
+import { getRoundRobins } from "../services/roundRobinService";
 
 const AdminEditEventsPage = () => {
   const [roundRobins, setRoundRobins] = useState([]);
-  const [selectedRoundRobinId, setSelectedRoundRobinId] = useState(null); // State to store the selected RoundRobin ID
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,92 +33,59 @@ const AdminEditEventsPage = () => {
     fetchRoundRobins();
   }, []);
 
-  const handleEdit = (id) => {
-    setSelectedRoundRobinId(id);
-    navigate(`/edit-round-robin/${id}`);
-  };
-
-  const handleCardClick = (id) => {
-    // Set the selectedRoundRobinId state when a card is clicked
-
-
-    // Navigate to the edit page with the specific round robin id
-    
+  const formatDate = (date) => {
+    return new Date(date).toLocaleString('en-US', {
+      weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true
+    });
   };
 
   return (
     <Box p={3}>
       <Typography variant="h4" gutterBottom>
-        Round Robins List
+        Upcoming Events
       </Typography>
-      <Grid container spacing={3}>
-        {roundRobins
-          .sort((a, b) => new Date(a.date) - new Date(b.date))
+      <Grid container spacing={2}>
+        {roundRobins.sort((a, b) => new Date(a.date) - new Date(b.date))
           .map((roundRobin) => (
             <Grid item xs={12} sm={6} md={4} key={roundRobin._id}>
-              <Card
-                variant="outlined"
-                sx={{
-                  cursor: "pointer",
-                  backgroundColor:
-                    selectedRoundRobinId === roundRobin._id
-                      ? "#f0f0f0"
-                      : "inherit",
-                }}
-                onClick={() => handleCardClick(roundRobin._id)}
-              >
-                <CardContent sx={{ paddingTop: 3, paddingBottom: 2 }}>
-                  <Typography variant="h5" component="div" gutterBottom>
+              <Card variant="outlined" sx={{ height: '100%' }}>
+                <CardContent>
+                  <Typography variant="h6" component="div">
                     {roundRobin.title}
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    gutterBottom
-                  >
-                    Date: {new Date(roundRobin.date).toLocaleDateString()}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    gutterBottom
-                  >
-                    Time: {roundRobin.startTime} - {roundRobin.endTime}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    gutterBottom
-                  >
-                    Location: {roundRobin.location}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    gutterBottom
-                  >
-                    Description: {roundRobin.gameDescription}
-                  </Typography>
-                  <Box
-                    mt={2}
-                    display="flex"
-                    justifyContent="flex-end"
-                    alignItems="center"
-                  >
-                    <Button
-                      onClick={() => handleEdit(roundRobin._id)}
-                      color="primary"
-                      variant="contained"
-                      startIcon={<EditIcon />}
-                      sx={{ ml: 1 }}
-                    >
-                      Edit
-                    </Button>
+                  <Box display="flex" alignItems="center" color="text.secondary" sx={{ mt: 1, mb: 1 }}>
+                    <EventIcon fontSize="small" sx={{ mr: 1, color: 'purple' }} />
+                    <Typography variant="body2" gutterBottom>
+                      {formatDate(roundRobin.date)}
+                    </Typography>
                   </Box>
+                  <Box display="flex" alignItems="center" color="text.secondary" sx={{ mb: 1 }}>
+                    <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'blue' }} />
+                    <Typography variant="body2" gutterBottom>
+                      {formatDate(roundRobin.startTime)}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" gutterBottom>
+                    ${roundRobin.fee}
+                  </Typography>
+                  {roundRobin.isFull && <Chip label="FULL" color="error" />}
+                  {roundRobin.link && (
+                    <Box display="flex" alignItems="center" sx={{ mt: 1 }}>
+                      <LinkIcon fontSize="small" sx={{ mr: 1, color: 'green' }} />
+                      <Link href={roundRobin.link} target="_blank" rel="noopener">
+                        Join Event
+                      </Link>
+                    </Box>
+                  )}
                 </CardContent>
+                <CardActions>
+                  <Button size="small" variant="contained" onClick={() => navigate(`/edit-round-robin/${roundRobin._id}`)}>
+                    Details
+                  </Button>
+                </CardActions>
               </Card>
             </Grid>
-          ))}
+        ))}
       </Grid>
     </Box>
   );

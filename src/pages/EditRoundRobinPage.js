@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import {
+    Typography, Box, TextField, Button, RadioGroup, FormControlLabel, Radio,
+    Switch, Slider, Grid, Alert
+} from '@mui/material';
 import { getRoundRobin, updateRoundRobin, deleteRoundRobin } from '../services/roundRobinService';
-import { Typography, Box, TextField, Button, RadioGroup, FormControlLabel, Radio, Switch, Slider, Grid } from '@mui/material';
 import { styled } from '@mui/system';
 
 const FormContainer = styled(Box)(({ theme }) => ({
@@ -13,6 +16,8 @@ const FormContainer = styled(Box)(({ theme }) => ({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: '100vh',
+    marginTop: '50px',
+    marginBottom: '50px',
     backgroundColor: theme.palette.background.paper,
     borderRadius: theme.shape.borderRadius,
     boxShadow: theme.shadows[4]
@@ -21,20 +26,36 @@ const FormContainer = styled(Box)(({ theme }) => ({
 const EditRoundRobinPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [roundRobin, setRoundRobin] = useState(null);
+    const [roundRobin, setRoundRobin] = useState({
+        title: '',
+        location: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        isPublic: true,
+        gameDescription: '',
+        maxPlayers: 10,
+        maxRounds: 2,
+        scoringOptions: '1 Match',
+        isRotatingPartners: false,
+        isRecurring: false,
+        minRating: '',
+        maxRating: '',
+        submitScoresToDUPR: false,
+        cost: '',
+        link: ''
+    });
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchRoundRobinDetails = async () => {
             try {
                 const roundRobinDetails = await getRoundRobin(id);
-
-                // Format the date to YYYY-MM-DD
                 roundRobinDetails.date = new Date(roundRobinDetails.date).toISOString().split('T')[0];
-
                 setRoundRobin(roundRobinDetails);
             } catch (error) {
                 console.error('Error fetching round robin details:', error);
-                // Handle error (e.g., display error message)
+                setError('Failed to load round robin details.');
             }
         };
 
@@ -43,37 +64,36 @@ const EditRoundRobinPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setError('');
         try {
             await updateRoundRobin(id, roundRobin);
-            navigate('/'); // Redirect to round-robin list page after successful update
+            navigate('/round-robins'); // Adjust as needed to match your routing
         } catch (error) {
             console.error('Error updating round robin:', error);
-            // Handle error (e.g., display error message)
+            setError('Failed to update the event. Please try again.');
         }
     };
 
     const handleDelete = async () => {
         try {
             await deleteRoundRobin(id);
-            alert('Round Robin deleted successfully');
-            navigate('/'); // Redirect to round-robin list page after successful deletion
+            navigate('/round-robins'); // Redirect appropriately after deletion
         } catch (error) {
             console.error('Error deleting round robin:', error);
-            // Handle error (e.g., display error message)
+            setError('Failed to delete the event. Please try again.');
         }
     };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setRoundRobin({ ...roundRobin, [name]: value });
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setRoundRobin({
+            ...roundRobin,
+            [name]: type === 'checkbox' ? checked : value
+        });
     };
 
     const handleSliderChange = (name) => (e, value) => {
         setRoundRobin({ ...roundRobin, [name]: value });
-    };
-
-    const handleSwitchChange = (name) => (e) => {
-        setRoundRobin({ ...roundRobin, [name]: e.target.checked });
     };
 
     if (!roundRobin) {
@@ -83,59 +103,59 @@ const EditRoundRobinPage = () => {
     return (
         <FormContainer>
             <Typography variant="h5">Edit Round Robin</Typography>
+            {error && <Alert severity="error">{error}</Alert>}
             <form onSubmit={handleSubmit}>
                 <TextField
                     label="Event Title"
                     fullWidth
                     margin="normal"
                     name="title"
-                    value={roundRobin.title}
-                    onChange={handleInputChange}
+                    value={roundRobin.title || ''}
+                    onChange={handleChange}
                 />
                 <TextField
                     label="Location"
                     fullWidth
                     margin="normal"
                     name="location"
-                    value={roundRobin.location}
-                    onChange={handleInputChange}
+                    value={roundRobin.location || ''}
+                    onChange={handleChange}
                 />
-                <Grid container spacing={2} mb={2}>
-                    <Grid item xs={4}>
-                        <TextField
-                            type="date"
-                            label="Date"
-                            InputLabelProps={{ shrink: true }}
-                            fullWidth
-                            name="date"
-                            value={roundRobin.date}
-                            onChange={handleInputChange}
-                        />
-                    </Grid>
-                    <Grid item xs={4}>
+                <TextField
+                style={{marginTop:"10px"}}
+                    type="date"
+                    label="Date"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    name="date"
+                    value={roundRobin.date}
+                    onChange={handleChange}
+                />
+                <Grid style={{marginTop:"10px"}} container spacing={2}>
+                    <Grid item xs={6}>
                         <TextField
                             type="time"
                             label="Start Time"
-                            InputLabelProps={{ shrink: true }}
                             fullWidth
+                            InputLabelProps={{ shrink: true }}
                             name="startTime"
                             value={roundRobin.startTime}
-                            onChange={handleInputChange}
+                            onChange={handleChange}
                         />
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={6}>
                         <TextField
                             type="time"
                             label="End Time"
-                            InputLabelProps={{ shrink: true }}
                             fullWidth
+                            InputLabelProps={{ shrink: true }}
                             name="endTime"
                             value={roundRobin.endTime}
-                            onChange={handleInputChange}
+                            onChange={handleChange}
                         />
                     </Grid>
                 </Grid>
-                <RadioGroup row name="isPublic" value={roundRobin.isPublic ? 'public' : 'private'} onChange={handleInputChange}>
+                <RadioGroup row name="isPublic" value={roundRobin.isPublic ? 'public' : 'private'} onChange={handleChange}>
                     <FormControlLabel value="public" control={<Radio />} label="Public" />
                     <FormControlLabel value="private" control={<Radio />} label="Private" />
                 </RadioGroup>
@@ -147,61 +167,66 @@ const EditRoundRobinPage = () => {
                     margin="normal"
                     name="gameDescription"
                     value={roundRobin.gameDescription}
-                    onChange={handleInputChange}
+                    onChange={handleChange}
+                />
+                <TextField
+                    label="Cost"
+                    fullWidth
+                    margin="normal"
+                    type="number"
+                    name="cost"
+                    value={roundRobin.cost}
+                    onChange={handleChange}
+                />
+                <TextField
+                    label="Link for Joining"
+                    fullWidth
+                    margin="normal"
+                    name="link"
+                    value={roundRobin.link}
+                    onChange={handleChange}
                 />
                 <Box mb={2}>
-                    <Typography variant="body2">Max # Players: {roundRobin.maxPlayers}</Typography>
+                    <Typography variant="body2">Max # of Players</Typography>
                     <Slider
                         min={4}
                         max={28}
                         value={roundRobin.maxPlayers}
+                        onChange={(e, value) => handleSliderChange('maxPlayers')(e, value)}
                         valueLabelDisplay="auto"
-                        onChange={handleSliderChange('maxPlayers')}
                     />
                 </Box>
                 <Box mb={2}>
-                    <Typography variant="body2">Max # Rounds: {roundRobin.maxRounds}</Typography>
+                    <Typography variant="body2">Max # of Rounds</Typography>
                     <Slider
                         min={2}
                         max={10}
                         value={roundRobin.maxRounds}
+                        onChange={(e, value) => handleSliderChange('maxRounds')(e, value)}
                         valueLabelDisplay="auto"
-                        onChange={handleSliderChange('maxRounds')}
                     />
                 </Box>
-                <RadioGroup row name="scoringOptions" value={roundRobin.scoringOptions} onChange={handleInputChange}>
-                    <FormControlLabel value="1 Match" control={<Radio />} label="1 Match" />
-                    <FormControlLabel value="Best 2/3" control={<Radio />} label="Best 2/3" />
-                </RadioGroup>
-                <FormControlLabel
-                    control={<Switch checked={roundRobin.isRotatingPartners} onChange={handleSwitchChange('isRotatingPartners')} />}
-                    label="Is this a Rotating Partners Round Robin?"
-                />
-                <FormControlLabel
-                    control={<Switch checked={roundRobin.isRecurring} onChange={handleSwitchChange('isRecurring')} />}
-                    label="Is this a Recurring Event?"
-                />
-                <TextField
-                    label="Edit/Add link to join Round-Robin"
-                    fullWidth
-                    variant="outlined"
-                    margin="normal"
-                    name="link"
-                    value={roundRobin.link}
-                    onChange={handleInputChange}
-                />
-                {roundRobin.link && (
-                    <Box mt={2}>
-                        <iframe
-                            title="Embedded Content"
-                            width="100%"
-                            height="400px"
-                            src={roundRobin.link}
-                            frameBorder="0"
-                            allowFullScreen
-                        />
-                    </Box>
-                )}
+                <Box mb={2}>
+                    <Typography variant="body2">Scoring Options</Typography>
+                    <RadioGroup row name="scoringOptions" value={roundRobin.scoringOptions} onChange={handleChange}>
+                        <FormControlLabel value="1 Match" control={<Radio />} label="1 Match" />
+                        <FormControlLabel value="Best 2/3" control={<Radio />} label="Best 2/3" />
+                    </RadioGroup>
+                </Box>
+                <Box mb={2}>
+                    <Typography variant="body2">Is this a Rotating Partners Round Robin?</Typography>
+                    <Switch
+                        checked={roundRobin.isRotatingPartners}
+                        onChange={(e) => handleChange({ target: { name: 'isRotatingPartners', checked: e.target.checked }})}
+                    />
+                </Box>
+                <Box mb={2}>
+                    <Typography variant="body2">Is this event recurring?</Typography>
+                    <Switch
+                        checked={roundRobin.isRecurring}
+                        onChange={(e) => handleChange({ target: { name: 'isRecurring', checked: e.target.checked }})}
+                    />
+                </Box>
                 <Box mt={2} display="flex" justifyContent="space-between" width="100%">
                     <Button type="submit" variant="contained" color="primary">
                         Update Event
@@ -211,7 +236,6 @@ const EditRoundRobinPage = () => {
                     </Button>
                 </Box>
             </form>
-            
         </FormContainer>
     );
 };

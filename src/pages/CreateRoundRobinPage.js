@@ -10,18 +10,8 @@ import {
     Radio,
     Switch,
     Slider,
-    Grid,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    IconButton,
-    Divider,
-    Link,
-    Alert
+    Grid
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
 import { createRoundRobin } from '../services/roundRobinService';
 import { styled } from '@mui/system';
 
@@ -34,187 +24,168 @@ const FormContainer = styled(Box)(({ theme }) => ({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: '100vh',
+    marginTop: '50px',
+    marginBottom: '50px',
     backgroundColor: theme.palette.background.paper,
     borderRadius: theme.shape.borderRadius,
     boxShadow: theme.shadows[4]
 }));
 
-const CourtContainer = styled(Grid)({
-    display: 'flex',
-    alignItems: 'center'
-});
-
 const CreateRoundRobinPage = () => {
-    const [title, setTitle] = useState('');
-    const [location, setLocation] = useState('');
-    const [date, setDate] = useState('');
-    const [startTime, setStartTime] = useState('');
-    const [endTime, setEndTime] = useState('');
-    const [isPublic, setIsPublic] = useState(true);
-    const [gameDescription, setGameDescription] = useState('');
-    const [maxPlayers, setMaxPlayers] = useState(10);
-    const [maxRounds, setMaxRounds] = useState(2);
-    const [scoringOptions, setScoringOptions] = useState('1 Match');
-    const [isRotatingPartners, setIsRotatingPartners] = useState(true);
-    const [requireDUPR, setRequireDUPR] = useState(false);
-    const [minRating, setMinRating] = useState('');
-    const [maxRating, setMaxRating] = useState('');
-    const [submitScoresToDUPR, setSubmitScoresToDUPR] = useState(false);
-    const [clubID, setClubID] = useState('');
-    const [isRecurring, setIsRecurring] = useState(false);
-    const [error, setError] = useState('');
-    const [link, setLink] = useState('');
+    const [formData, setFormData] = useState({
+        title: '',
+        location: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        isPublic: true,
+        gameDescription: '',
+        maxPlayers: 10,
+        maxRounds: 2,
+        scoringOptions: '1 Match',
+        isRotatingPartners: false,
+        isRecurring: false,
+        minRating: '',
+        maxRating: '',
+        submitScoresToDUPR: false,
+        cost: '',
+        link: ''
+    });
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-
-        if (!title.trim()) {
-            setError('Event title is required.');
-            return;
-        }
-
-        const eventsToCreate = [];
-        if (isRecurring) {
-            for (let i = 0; i < 10; i++) {
-                const eventDate = new Date(date);
-                eventDate.setDate(eventDate.getDate() + (i * 7));
-                eventsToCreate.push(buildEventObject(eventDate.toISOString().slice(0, 10)));
-            }
-        } else {
-            eventsToCreate.push(buildEventObject(date));
-        }
-
         try {
-            for (const event of eventsToCreate) {
-                await createRoundRobin(event);
-            }
-            navigate('/');
+            await createRoundRobin(formData);
+            navigate('/round-robins'); // Adjust as needed to match your routing
         } catch (error) {
-            console.error('Round Robin creation failed:', error);
-            setError('Failed to create the event. Please try again.');
+            console.error('Error creating round robin:', error);
+            alert('Failed to create the event. Please try again.');
         }
     };
 
-    const buildEventObject = (eventDate) => ({
-        title,
-        location,
-        date: eventDate,
-        startTime,
-        endTime,
-        isPublic,
-        gameDescription,
-        maxPlayers,
-        maxRounds,
-        scoringOptions,
-        isRotatingPartners,
-        isRecurring,
-        requireDUPR,
-        minRating,
-        maxRating,
-        submitScoresToDUPR,
-        clubID,
-    });
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData({
+            ...formData,
+            [name]: type === 'checkbox' ? checked : value
+        });
+    };
+
+    const handleSliderChange = (name) => (e, value) => {
+        setFormData({ ...formData, [name]: value });
+    };
 
     return (
         <FormContainer>
-            <Typography variant="h5" align="center" mb={2}>
+            <Typography variant="h5" align="center" mb={4}>
                 Create a Round Robin Event
             </Typography>
-            {error && <Alert severity="error" style={{ width: '100%', marginBottom: 16 }}>{error}</Alert>}
             <form onSubmit={handleSubmit}>
                 <TextField
-                    required
                     label="Event Title"
                     fullWidth
                     margin="normal"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
                 />
                 <TextField
-                    required
                     label="Location"
                     fullWidth
                     margin="normal"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
                 />
-                <Grid container spacing={2} mb={2}>
-                    <Grid item xs={4}>
+                <TextField
+                     style={{marginTop: "10px"}}
+                    type="date"
+                    label="Date"
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                    name="date"
+                    value={formData.date}
+                    onChange={handleChange}
+                />
+                <Grid container style={{marginTop: "10px"}} spacing={2}>
+                    <Grid item xs={6}>
                         <TextField
-                            required
-                            type="date"
-                            label="Date"
-                            InputLabelProps={{ shrink: true }}
-                            fullWidth
-                            value={date}
-                            onChange={(e) => setDate(e.target.value)}
-                        />
-                    </Grid>
-                    <Grid item xs={4}>
-                        <TextField
-                            required
                             type="time"
                             label="Start Time"
-                            InputLabelProps={{ shrink: true }}
                             fullWidth
-                            value={startTime}
-                            onChange={(e) => setStartTime(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                            name="startTime"
+                            value={formData.startTime}
+                            onChange={handleChange}
                         />
                     </Grid>
-                    <Grid item xs={4}>
+                    <Grid item xs={6}>
                         <TextField
-                            required
                             type="time"
                             label="End Time"
-                            InputLabelProps={{ shrink: true }}
                             fullWidth
-                            value={endTime}
-                            onChange={(e) => setEndTime(e.target.value)}
+                            InputLabelProps={{ shrink: true }}
+                            name="endTime"
+                            value={formData.endTime}
+                            onChange={handleChange}
                         />
                     </Grid>
                 </Grid>
-                <Box mb={2}>
-                    <Typography variant="body2">Is this game public or private?</Typography>
-                    <RadioGroup row value={isPublic ? 'public' : 'private'} onChange={(e) => setIsPublic(e.target.value === 'public')}>
-                        <FormControlLabel value="public" control={<Radio />} label="Public" />
-                        <FormControlLabel value="private" control={<Radio />} label="Private" />
-                    </RadioGroup>
-                </Box>
+                <RadioGroup row name="isPublic" value={formData.isPublic ? 'public' : 'private'} onChange={handleChange}>
+                    <FormControlLabel value="public" control={<Radio />} label="Public" />
+                    <FormControlLabel value="private" control={<Radio />} label="Private" />
+                </RadioGroup>
                 <TextField
-                    required
                     label="Game Description"
                     fullWidth
                     multiline
                     rows={4}
                     margin="normal"
-                    value={gameDescription}
-                    onChange={(e) => setGameDescription(e.target.value)}
+                    name="gameDescription"
+                    value={formData.gameDescription}
+                    onChange={handleChange}
+                />
+                <TextField
+                    label="Cost"
+                    fullWidth
+                    margin="normal"
+                    type="number"
+                    name="cost"
+                    value={formData.cost}
+                    onChange={handleChange}
+                />
+                <TextField
+                    label="Link for Joining"
+                    fullWidth
+                    margin="normal"
+                    name="link"
+                    value={formData.link}
+                    onChange={handleChange}
                 />
                 <Box mb={2}>
-                    <Typography variant="body2">Max # Players: {maxPlayers}</Typography>
+                    <Typography variant="body2">Max # of Players</Typography>
                     <Slider
                         min={4}
                         max={28}
-                        value={maxPlayers}
+                        value={formData.maxPlayers}
+                        onChange={handleSliderChange('maxPlayers')}
                         valueLabelDisplay="auto"
-                        onChange={(e, value) => setMaxPlayers(value)}
                     />
                 </Box>
                 <Box mb={2}>
-                    <Typography variant="body2">Max # Rounds: {maxRounds}</Typography>
+                    <Typography variant="body2">Max # of Rounds</Typography>
                     <Slider
                         min={2}
                         max={10}
-                        value={maxRounds}
+                        value={formData.maxRounds}
+                        onChange={handleSliderChange('maxRounds')}
                         valueLabelDisplay="auto"
-                        onChange={(e, value) => setMaxRounds(value)}
                     />
                 </Box>
                 <Box mb={2}>
                     <Typography variant="body2">Scoring Options</Typography>
-                    <RadioGroup row value={scoringOptions} onChange={(e) => setScoringOptions(e.target.value)}>
+                    <RadioGroup row name="scoringOptions" value={formData.scoringOptions} onChange={handleChange}>
                         <FormControlLabel value="1 Match" control={<Radio />} label="1 Match" />
                         <FormControlLabel value="Best 2/3" control={<Radio />} label="Best 2/3" />
                     </RadioGroup>
@@ -222,43 +193,23 @@ const CreateRoundRobinPage = () => {
                 <Box mb={2}>
                     <Typography variant="body2">Is this a Rotating Partners Round Robin?</Typography>
                     <Switch
-                        checked={isRotatingPartners}
-                        onChange={(e) => setIsRotatingPartners(e.target.checked)}
+                        checked={formData.isRotatingPartners}
+                        onChange={(e) => handleChange({ target: { name: 'isRotatingPartners', checked: e.target.checked }})}
                     />
                 </Box>
-                <Box mb={2}> 
-                    <Typography variant="body2">Is this a recurring event?</Typography>
+                <Box mb={2}>
+                    <Typography variant="body2">Is this event recurring?</Typography>
                     <Switch
-                        checked={isRecurring}
-                        onChange={(e) => setIsRecurring(e.target.checked)}
+                        checked={formData.isRecurring}
+                        onChange={(e) => handleChange({ target: { name: 'isRecurring', checked: e.target.checked }})}
                     />
                 </Box>
-                <TextField
-                    fullWidth
-                    label="Add a link"
-                    variant="outlined"
-                    margin="normal"
-                    value={link}
-                    onChange={(e) => setLink(e.target.value)}
-                />
-                {link && (
-                    <Box mt={2}>
-                        <iframe
-                            title="Embedded Content"
-                            width="100%"
-                            height="400px"
-                            src={link}
-                            frameBorder="0"
-                            allowFullScreen
-                        />
-                    </Box>
-                )}
                 <Button
+                    type="submit"
                     variant="contained"
                     color="primary"
-                    type="submit"
                     fullWidth
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 3 }}
                 >
                     Create Event
                 </Button>
