@@ -67,7 +67,7 @@ const EditRoundRobinPage = () => {
         setError('');
         try {
             await updateRoundRobin(id, roundRobin);
-            navigate('/round-robins'); // Adjust as needed to match your routing
+            navigate('/edit'); // Adjust as needed to match your routing
         } catch (error) {
             console.error('Error updating round robin:', error);
             setError('Failed to update the event. Please try again.');
@@ -77,7 +77,7 @@ const EditRoundRobinPage = () => {
     const handleDelete = async () => {
         try {
             await deleteRoundRobin(id);
-            navigate('/round-robins'); // Redirect appropriately after deletion
+            navigate('/edit'); // Redirect appropriately after deletion
         } catch (error) {
             console.error('Error deleting round robin:', error);
             setError('Failed to delete the event. Please try again.');

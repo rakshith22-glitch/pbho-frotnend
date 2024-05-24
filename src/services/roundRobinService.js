@@ -38,3 +38,23 @@ export const deleteRoundRobin = async (id) => {
     const response = await axios.delete(`${API_URL}${id}`, config);
     return response.data;
 };
+
+export const joinRoundRobin = async (id) => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const config = { headers: { Authorization: `Bearer ${user.token}` } };
+    const response = await axios.post(`${API_URL}${id}/join`, {}, config);
+    if (response.status !== 200) {
+        throw new Error('Failed to join round robin.');
+    }
+    return response.data;
+};
+
+export const joinWaitlist = async (id) => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const config = { headers: { Authorization: `Bearer ${user.token}` } };
+    const response = await axios.post(`${API_URL}${id}/waitlist`, {}, config);
+    if (response.status !== 200) {
+        throw new Error('Failed to join waitlist.');
+    }
+    return response.data;
+};

@@ -68,7 +68,7 @@ const CreateRoundRobinPage = () => {
         const { name, value, type, checked } = e.target;
         setFormData({
             ...formData,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: type === 'checkbox' || type === 'switch' ? checked : value
         });
     };
 
@@ -193,15 +193,17 @@ const CreateRoundRobinPage = () => {
                 <Box mb={2}>
                     <Typography variant="body2">Is this a Rotating Partners Round Robin?</Typography>
                     <Switch
+                        name="isRotatingPartners"
                         checked={formData.isRotatingPartners}
-                        onChange={(e) => handleChange({ target: { name: 'isRotatingPartners', checked: e.target.checked }})}
+                        onChange={handleChange}
                     />
                 </Box>
                 <Box mb={2}>
                     <Typography variant="body2">Is this event recurring?</Typography>
                     <Switch
+                        name="isRecurring"
                         checked={formData.isRecurring}
-                        onChange={(e) => handleChange({ target: { name: 'isRecurring', checked: e.target.checked }})}
+                        onChange={handleChange}
                     />
                 </Box>
                 <Button
