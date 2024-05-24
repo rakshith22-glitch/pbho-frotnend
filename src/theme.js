@@ -1,20 +1,20 @@
-// frontend/src/theme.js
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#000000',
+      main: '#283593', // A deep, muted blue, suitable for a professional look
     },
     secondary: {
-      main: '#6B8E23',
+      main: '#009688', // A teal shade that pairs well with the primary color
     },
     background: {
-      default: '#FDF5E6',
-      paper: '#FFF8DC',
+      default: '#f4f4f4', // A light grey, less stark than pure white
+      paper: '#ffffff', // Keeping paper as white for clear contrast
     },
     text: {
-      primary: '#333',
+      primary: '#212121', // A dark grey, softer than pure black
+      secondary: '#757575' // A medium grey for secondary text
     },
   },
   typography: {

@@ -4,9 +4,10 @@ import {
     Typography,
     Grid,
     useMediaQuery,
-    useTheme
+    useTheme,
+    Tooltip
 } from '@mui/material';
-import { getRoundRobins, signUpForRoundRobin } from '../services/roundRobinService';
+import { getRoundRobins } from '../services/roundRobinService';
 import { getUserProfile } from '../services/userService';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -15,82 +16,63 @@ import { useNavigate } from 'react-router-dom';
 
 const localizer = momentLocalizer(moment);
 
+const hashCode = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const character = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + character;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+};
+
 const RoundRobinList = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const [roundRobins, setRoundRobins] = useState([]);
-    const [user, setUser] = useState(null);
     const [events, setEvents] = useState([]);
     const [colorMap, setColorMap] = useState({});
+    const fixedColors = ['#009688', '#FFD700', '#ADD8E6', '#90EE90', '#FFB6C1']; // Array of light colors
 
     useEffect(() => {
-        const fetchRoundRobins = async () => {
+        const fetchData = async () => {
             const roundRobinData = await getRoundRobins();
-            setRoundRobins(roundRobinData);
+            const userProfile = await getUserProfile();
             generateEvents(roundRobinData);
         };
-
-        const fetchUserProfile = async () => {
-            const userProfile = await getUserProfile();
-            setUser(userProfile);
-        };
-
-        fetchRoundRobins();
-        fetchUserProfile();
+        fetchData();
     }, []);
 
     const generateEvents = (roundRobins) => {
-        const calendarEvents = roundRobins.flatMap((roundRobin) => {
-            const eventList = [];
+        const calendarEvents = roundRobins.map((roundRobin) => {
             const startDate = new Date(roundRobin.date);
             const endDate = new Date(roundRobin.date);
-
             endDate.setHours(roundRobin.endTime.split(':')[0], roundRobin.endTime.split(':')[1]);
+            startDate.setHours(roundRobin.startTime.split(':')[0], roundRobin.startTime.split(':')[1]);
 
-            if (roundRobin.isRecurring) {
-                for (let i = 0; i < 52; i++) {
-                    const newEventDate = new Date(startDate);
-                    newEventDate.setDate(startDate.getDate() + i * 7);
-                    eventList.push({
-                        id: roundRobin._id,
-                        title: roundRobin.title || 'Round Robin',
-                        start: new Date(newEventDate.setHours(roundRobin.startTime.split(':')[0], roundRobin.startTime.split(':')[1])),
-                        end: new Date(newEventDate.setHours(roundRobin.endTime.split(':')[0], roundRobin.endTime.split(':')[1])),
-                        allDay: false
-                    });
-                }
-            } else {
-                eventList.push({
-                    id: roundRobin._id,
-                    title: roundRobin.title || 'Round Robin',
-                    start: new Date(startDate.setHours(roundRobin.startTime.split(':')[0], roundRobin.startTime.split(':')[1])),
-                    end: new Date(endDate),
-                    allDay: false
-                });
-            }
-            return eventList;
+            return {
+                id: roundRobin._id,
+                title: roundRobin.title || 'Round Robin',
+                start: startDate,
+                end: endDate,
+                location: roundRobin.location,
+                resource: roundRobin
+            };
         });
         setEvents(calendarEvents);
     };
 
-    const handleSelectEvent = (event) => {
-        const eventId = event.id;
-        navigate(`/round-robin/${eventId}`);
-    };
-
-    const generateRandomColor = () => {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
+    const eventPropGetter = (event) => {
+        const backgroundColor = getColorForEvent(event.title);
+        return {
+            style: { backgroundColor, borderColor: 'black' }
+        };
     };
 
     const getColorForEvent = (title) => {
         if (!colorMap[title]) {
-            const newColor = generateRandomColor();
+            const colorIndex = hashCode(title) % fixedColors.length;
+            const newColor = fixedColors[colorIndex];
             setColorMap((prevColorMap) => ({
                 ...prevColorMap,
                 [title]: newColor
@@ -100,14 +82,20 @@ const RoundRobinList = () => {
         return colorMap[title];
     };
 
-    const eventPropGetter = (event) => {
-        const backgroundColor = getColorForEvent(event.title);
-        return { style: { backgroundColor } };
+    const EventAgenda = ({ event }) => {
+        return (
+            <span>
+                <strong>{event.title}</strong>
+                <p>Start: {moment(event.start).format('HH:mm')} </p>
+                <p>End: {moment(event.end).format('HH:mm')}</p>
+                <p>Location: {event.location}</p>
+            </span>
+        );
     };
 
     return (
-        <Grid container spacing={2}>
-            <Grid item xs={12}>
+        <Grid container spacing={2} justifyContent="center" style={{marginTop: "2%", marginBottom: "2%"}}>
+            <Grid item xs={12} md={10} style={{ maxWidth: '90%' }}>
                 <Box
                     p={isMobile ? 2 : 4}
                     boxShadow={2}
@@ -127,11 +115,12 @@ const RoundRobinList = () => {
                         startAccessor="start"
                         endAccessor="end"
                         style={{
-                            height: isMobile ? 'calc(80vh - 96px)' : 'calc(100vh - 96px)',
+                            height: isMobile ? 'calc(100vh - 96px)' : '140vh',
                             minHeight: 500,
                             fontSize: isMobile ? '12px' : 'inherit'
                         }}
-                        onSelectEvent={handleSelectEvent}
+                        components={{ event: EventAgenda }}
+                        onSelectEvent={(event) => navigate(`/round-robin/${event.id}`)}
                         eventPropGetter={eventPropGetter}
                     />
                 </Box>
