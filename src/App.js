@@ -64,7 +64,7 @@ const Navbar = () => {
           <>
             {user.userType === "admin" ? (
               <>
-                <ListItem button component={Link} to="/choose-game-format">
+                <ListItem button component={Link} to="/create-round-robin">
                   <ListItemText primary="Create Round Robin" />
                 </ListItem>
                 <ListItem button component={Link} to="/edit">
@@ -154,7 +154,7 @@ const Navbar = () => {
                     <Button
                       color="inherit"
                       component={Link}
-                      to="/choose-game-format"
+                      to="/create-round-robin"
                     >
                       Create Round Robin
                     </Button>
@@ -220,12 +220,12 @@ const App = () => {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignUpPage />} />
               <Route path="/become-member" element={<BecomeMemberPage />} />
-              <Route
+              {/* <Route
                 path="/choose-game-format"
                 element={<ChooseGameFormatPage />}
-              />
+              /> */}
               <Route
-                path="/create-round-robin/:format"
+                path="/create-round-robin/"
                 element={<CreateRoundRobinPage />}
               />
               <Route path="/events" element={<RoundRobinList />} />
